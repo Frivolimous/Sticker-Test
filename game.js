@@ -111,7 +111,7 @@ function startAnimation(center) {
   // triangle spin (main timing)
   new JMTween(vector, main).wait(intro).to({angle: Math.PI * 4}).start().onUpdate(setPositions)
     .chain(vector, outro).to({angle: Math.PI * 6}).onUpdate(setPositions)
-    .onComplete(triangles.forEach(triangle => triangle.destroy()));
+    .onComplete(() => triangles.forEach(triangle => triangle.destroy()));
 
   // triangle distance
   new JMTween(vector, main / 2).wait(intro).to({distance: 15}).start()
