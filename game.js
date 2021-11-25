@@ -47,7 +47,12 @@ window.addEventListener('keydown', e => {
 
 function startAnimation(center) {
   let triangles = [];
-  let vector = {angle: 0, distance: 30, color: 0xffff00, alpha: 0};
+  let vector = {
+    angle: 0,
+    distance: 30,
+    color: 0xffff00,
+    alpha: 0,
+  };
   let bubble = new Bubble;
   app.stage.addChild(bubble);
   bubble.position.set(center.x, center.y);
@@ -67,53 +72,60 @@ function startAnimation(center) {
     });
   }
 
-  let dispose = () => {
-    triangles.forEach(triangle => triangle.destroy());
-    bubble.destroy();
-  }
-
   setPositions();
 
   bubble.width = bubble.height = 0;
   bubble.alpha = 0;
   bubble.tint = 0;
 
+  // COLOR VALUES
+  let colorBubble1 = 0xcc00ff;
+  let colorBubble2 = 0xff00cc;
+
+  let colorArrow1 = 0xffff00;
+  let colorArrow2 = 0x00ff00;
+  // let colorArrow3 = 0xffcc00;
+  let colorArrowFlash = 0xffffff;
+
   // TIMING VALUES
   let timeScale = 1;
 
-  let intro = 800 * timeScale;
+  let intro = 1000 * timeScale;
   let main = 3000 * timeScale;
   let outro = main * 0.25;
-  // let outro = 800 * timeScale;
 
-
-  // bubble scaling
+  // bubble scaling (main timing)
   new JMTween(bubble, intro * 1.25).to({width: 100, height: 100}).easing(Easing.Back.Out).start()
-    .chain(bubble, outro).wait(main * 0.9 - intro * 0.25).to({width: 0, height: 0}).easing(Easing.Back.In);
+    .chain(bubble, outro).wait(main * 0.9 - intro * 0.25).to({width: 0, height: 0}).easing(Easing.Back.In)
+    .onComplete(() => bubble.destroy());
 
   // bubble alpha
   new JMTween(bubble, intro / 2).to({alpha: 1}).start();
 
   // bubble colour
-  new JMTween(bubble, intro * 1.25 / 3).colorTo({tint: 0xff00cc}).start()
-    .chain(bubble, intro * 1.25 / 3).wait(intro * 1.25 / 3).colorTo({tint: 0xcc00ff});
+  new JMTween(bubble, intro / 3).colorTo({tint: colorBubble1}).start()
+    .chain(bubble, intro / 3).wait(intro / 3).colorTo({tint: colorBubble2})
+    .chain(bubble, outro / 3).wait(main * 0.9).colorTo({tint: colorBubble1})
+    .chain(bubble, outro / 3).wait(outro / 3).colorTo({tint: 0});
+
+  // triangle spin (main timing)
+  new JMTween(vector, main).wait(intro).to({angle: Math.PI * 4}).start().onUpdate(setPositions)
+    .chain(vector, outro).to({angle: Math.PI * 6}).onUpdate(setPositions)
+    .onComplete(triangles.forEach(triangle => triangle.destroy()));
+
+  // triangle distance
+  new JMTween(vector, main / 2).wait(intro).to({distance: 15}).start()
+    .chain(vector, outro).wait(main / 2 * 0.8).to({distance: 100}).easing(Easing.Back.In);
 
   // triangle alpha
-  new JMTween(vector, 50).wait(intro).to({alpha: 1}).start();
+  new JMTween(vector, 100).wait(intro).to({alpha: 1}).start()
+  .chain(vector, outro / 2).wait(main).to({alpha: 0});
 
   // triangle colour
-  new JMTween(vector, main / 3).wait(intro).colorTo({color: 0x00ff00}).easing(Easing.Quadratic.In).start()
-    .chain(vector, main / 3000 * 100).wait(main / 3000 * 1300).colorTo({color: 0xffffff}).easing(Easing.Quadratic.In).yoyo(true, 2);
-  
-  // triangle movement
-  new JMTween(vector, main / 2).wait(intro).to({distance: 15, angle: Math.PI * 2}).start().onUpdate(setPositions)
-    .chain(vector, main / 2).to({angle: Math.PI * 4}).onUpdate(setPositions).onComplete(() => {
-      new JMTween(vector, outro / 2).to({alpha: 0}).start();
-      // new JMTween(vector, 1500).to({distance: 30, angle: Math.PI * 10}).start();
-    })
-    .chain(vector, outro).to({distance: 90, angle: Math.PI * 6}).onUpdate(setPositions)
-    .onComplete(dispose);
-
+  vector.color = colorArrow1;
+  new JMTween(vector, main * 0.3).wait(intro).colorTo({color: colorArrow2}).easing(Easing.Quadratic.In).start()
+    .chain(vector, main * 0.04).wait(main * 0.4).colorTo({color: colorArrowFlash}).easing(Easing.Quadratic.In)
+    .yoyo(true, 2);
 }
 
 class TriangleArrow extends PIXI.Graphics {
