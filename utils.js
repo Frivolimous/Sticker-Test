@@ -108,6 +108,7 @@ class JMTween {
   tickThis;
 
   onUpdateCallback;
+  onUpdateComplete;
   onCompleteCallback;
   onWaitCompleteCallback;
 
@@ -135,8 +136,9 @@ class JMTween {
     this.tickThis = this.firstTick;
   }
 
-  onUpdate = (callback) => {
+  onUpdate = (callback, andComplete = false) => {
     this.onUpdateCallback = callback;
+    this.onUpdateComplete = andComplete;
 
     return this;
   }
@@ -308,6 +310,7 @@ class JMTween {
 
       JMTween._remove(this);
       this.tickThis = () => { };
+      if (this.onUpdateComplete && this.onUpdateCallback) this.onUpdateCallback(this.object);
       if (this.onCompleteCallback) this.onCompleteCallback(this.object);
 
       if (this.nextTween) {
